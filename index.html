@@ -127,9 +127,9 @@ function initLevel(){
   };
 
   const ghostSpawns=[
-    {r:9,c:10},{r:10,c:9},{r:10,c:10},{r:10,c:11}
+    {r:8,c:10},{r:10,c:9},{r:10,c:10},{r:10,c:11}
   ];
-  const ghostDirs=[{dx:-1,dy:0},{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1}];
+  const ghostDirs=[{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1},{dx:0,dy:1}];
   ghosts = GHOST_COLORS.map((col,i)=>({
     x: ghostSpawns[i].c*CS+CS/2,
     y: ghostSpawns[i].r*CS+CS/2,
@@ -148,10 +148,16 @@ function initLevel(){
 
 // ── Helpers ────────────────────────────────────────────────────
 function cell(x,y){ return {c:Math.floor(x/CS), r:Math.floor(y/CS)}; }
-function wallAt(r,c){
+function wallAt(r,c){ // for pac-man
   if(r<0||r>=ROWS) return false;
   const cc = ((c%COLS)+COLS)%COLS;
   return map[r][cc]===1;
+}
+function wallAtGhost(r,c){ // ghosts can't re-enter ghost house
+  if(r<0||r>=ROWS) return true;
+  const cc = ((c%COLS)+COLS)%COLS;
+  const v = map[r][cc];
+  return v===1 || v===4;
 }
 function canMove(x,y,dx,dy,spd){
   const nx=x+dx*spd, ny=y+dy*spd;
@@ -165,7 +171,7 @@ function canMove(x,y,dx,dy,spd){
   for(const p of pts){
     const r=Math.floor(p.y/CS), c=((Math.floor(p.x/CS))%COLS+COLS)%COLS;
     if(r<0||r>=ROWS) continue;
-    if(map[r][c]===1) return false;
+    if(map[r][c]===1||map[r][c]===4) return false;
   }
   return true;
 }
@@ -259,7 +265,7 @@ function updateGhost(g){
     for(const d of dirs){
       if(d.dx===-g.dx&&d.dy===-g.dy) continue; // no U-turn
       const nr=r+d.dy, nc=(c+d.dx+COLS)%COLS;
-      if(wallAt(nr,nc)) continue;
+      if(wallAtGhost(nr,nc)) continue;
       const dist=(nr-tgt.r)**2+(nc-tgt.c)**2;
       if(dist<bestDist){bestDist=dist;best=d;}
     }
